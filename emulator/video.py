@@ -21,3 +21,10 @@ def set_pixel(vram, x, y, value):
         vram[byte_index] |= mask
     else:
         vram[byte_index] &= ~mask
+
+def framebuffer(vram):
+    """Return the 200x100 framebuffer as rows of 0/1 pixels."""
+    return [
+        [get_pixel(vram, x, y) for x in range(WIDTH)]
+        for y in range(HEIGHT)
+    ]
