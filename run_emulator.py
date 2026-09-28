@@ -20,6 +20,15 @@ def cpu_test():
 
     return nano.cpu.a
 
+def input_test():
+    nano = Nano1()
+    nano.input.press(nano.input.FIRE)
+    value = nano.memory.read8(0x2000)
+    nano.input.release(nano.input.FIRE)
+    if value != nano.input.FIRE:
+        raise AssertionError(f"Expected FIRE=16, got {value}")
+    return value
+
 def vram_test():
     nano = Nano1()
     # Write 1 to the first VRAM byte through the CPU.
@@ -73,6 +82,11 @@ if __name__ == "__main__":
     vram = vram_test()
     print(f"VRAM[0] = {vram}")
     print("VRAM write test passed.")
+    print()
+    print("Running input test...")
+    input_value = input_test()
+    print(f"Input register = 0x{input_value:02X}")
+    print("Input test passed.")
     print()
     print("Drawing 20x20 display test pattern...")
     draw_test_pattern(nano)
