@@ -6,7 +6,7 @@ class Nano1Tests(unittest.TestCase):
     def test_4bit_add(self):
         nano = Nano1()
         # LDI A, 3 ; LDI B, 5 ; ADD A, B ; HALT
-        program = bytes([0x13, 0x15, 0x31, 0xE0])
+        program = bytes([0x10, 0x03, 0x11, 0x05, 0x31, 0xE0])
         nano.load_program(program)
         nano.run()
         self.assertEqual(nano.cpu.a, 8)
