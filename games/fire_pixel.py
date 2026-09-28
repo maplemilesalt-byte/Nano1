@@ -17,14 +17,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from emulator.cartridge import save_file
 
-
 VRAM_BASE = 0x1000
 INPUT_FIRE = 0x2001
 VRAM_ROW_BYTES = 25
 
 
 def vram_addr(x_byte, y):
-    """Return the VRAM address for the 8-pixel-wide byte column."""
     return VRAM_BASE + y * VRAM_ROW_BYTES + x_byte
 
 
@@ -49,14 +47,12 @@ def jmp(address):
 
 
 def draw_sprite(rom, x_byte, y, pixels):
-    """Append a sprite whose rows use the low four bits of each VRAM byte."""
+    """Append a sprite to the ROM bytearray."""
     for row, pixels4 in enumerate(pixels):
         rom += ldi(0, pixels4)
         rom += store(vram_addr(x_byte, y + row))
 
 
-# Each row uses four visible pixels. The Nano1 framebuffer is 1-bit, so
-# these tiny sprites are intentionally chunky and monochrome.
 TARGET_LEFT = (0xF, 0x1, 0x1, 0x1, 0x1, 0x1, 0xF)
 TARGET_RIGHT = (0xF, 0x8, 0x8, 0x8, 0x8, 0x8, 0xF)
 SPARK = (0x4, 0x0, 0xE, 0x0, 0x4)
@@ -67,34 +63,28 @@ FLAME_BRIGHT = (0x0, 0xE, 0xF, 0xF, 0xF, 0xE, 0x4)
 def build_rom():
     rom = bytearray()
 
-    # Static scene.
     draw_sprite(rom, 10, 40, TARGET_LEFT)
     draw_sprite(rom, 13, 40, TARGET_RIGHT)
     draw_sprite(rom, 15, 35, SPARK)
     draw_sprite(rom, 12, 43, FLAME_DIM)
 
-    # Wait for FIRE.
     wait = 0x8000 + len(rom)
     rom += load(INPUT_FIRE)
     press_jump = len(rom)
     rom += jz(0)
 
-    # FIRE is held: draw the brighter flame.
     draw_sprite(rom, 12, 43, FLAME_BRIGHT)
 
-    # Keep the bright flame visible until FIRE is released.
     release = 0x8000 + len(rom)
     rom += load(INPUT_FIRE)
     release_jump = len(rom)
     rom += jz(0)
     rom += jmp(release)
 
-    # FIRE released: restore the dim flame and wait again.
     dim_after = 0x8000 + len(rom)
     draw_sprite(rom, 12, 43, FLAME_DIM)
     rom += jmp(wait)
 
-    # Patch the two conditional jumps now that their addresses are known.
     rom[press_jump + 1] = wait & 0xFF
     rom[press_jump + 2] = (wait >> 8) & 0xFF
     rom[release_jump + 1] = dim_after & 0xFF
