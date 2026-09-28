@@ -12,6 +12,20 @@ def cpu_test():
 
     return nano.cpu.a
 
+def vram_test():
+    nano = Nano1()
+    # Write 1 to the first VRAM byte through the CPU.
+    # LDI A, 1 ; STORE A, [0x1000] ; HALT
+    program = bytes([0x10, 0x01, 0xD0, 0x00, 0x10, 0xE0])
+    nano.load_program(program)
+    nano.run()
+    if nano.memory.vram[0] != 1:
+        raise AssertionError(f"Expected VRAM[0]=1, got {nano.memory.vram[0]}")
+    from emulator.video import get_pixel
+    if get_pixel(nano.memory.vram, 0, 0) != 0:
+        raise AssertionError("Expected pixel (0, 0) to remain OFF for VRAM byte 0x01")
+    return nano.memory.vram[0]
+
 def memory_test():
     nano = Nano1()
     # LDI A, 10 ; STORE A, [0x0200] ; LDI A, 0 ; LOAD A, [0x0200] ; HALT
@@ -46,3 +60,8 @@ if __name__ == "__main__":
     print(f"Loaded A = {value}")
     print()
     print("RAM test passed.")
+    print()
+    print("Running VRAM test...")
+    vram = vram_test()
+    print(f"VRAM[0] = {vram}")
+    print("VRAM write test passed.")
