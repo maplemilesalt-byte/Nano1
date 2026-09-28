@@ -34,8 +34,8 @@ def run_cube_demo(nano):
 
     canvas = tk.Canvas(
         root,
-        width=200 * 4,
-        height=100 * 4,
+        width=200,
+        height=100,
         bg="white",
         highlightthickness=0,
     )
