@@ -1,6 +1,13 @@
 from emulator.nano1 import Nano1
 from emulator.display import Display
 
+def draw_test_pattern(nano):
+    # Draw a 20x20 black square at the top-left of the 200x100 display.
+    from emulator.video import set_pixel
+    for y in range(20):
+        for x in range(20):
+            set_pixel(nano.memory.vram, x, y, 1)
+
 def cpu_test():
     nano = Nano1()
     # LDI A, 3 ; LDI B, 5 ; ADD A, B ; HALT
