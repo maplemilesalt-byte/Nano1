@@ -74,5 +74,7 @@ if __name__ == "__main__":
     print(f"VRAM[0] = {vram}")
     print("VRAM write test passed.")
     print()
+    print("Drawing 20x20 display test pattern...")
+    draw_test_pattern(nano)
     print("Starting Nano1 display...")
     Display(nano.memory.vram).run()
