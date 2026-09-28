@@ -73,7 +73,7 @@ def run_cube_demo(nano):
             status.config(text=f"Cartridge reset | PC: 0x{loaded_entry:04X}")
         else:
             status.config(text="Reset")
-        draw()
+            draw()
 
     def open_cartridge():
         nonlocal cartridge_loaded, loaded_entry
