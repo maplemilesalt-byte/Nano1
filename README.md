@@ -14,7 +14,7 @@ Game language: NanoLua
 
 ## Emulator
 
-The emulator is being built before the first Nano1 game.\n\n## .nan cartridges\n\n`.nan` is the Nano1 cartridge format. Version 1 stores a small header followed by the raw Nano Power 3 ROM. ROM is mapped at `0x8000`, and the header contains the CPU entry point.\n\nThe emulator menu has **File > Open Cartridge (.nan)** for loading cartridges. Raw ROMs can be packaged with `tools/make_nan.py`.
+The first Nano1 cartridge game is **Fire Pixel**. Press **Enter / FIRE** to toggle the center pixel. It runs directly on the Nano Power 3 CPU. Build it with `python3 games/fire_pixel.py` and open the generated `games/fire_pixel.nan` with **File > Open Cartridge (.nan)**.\n\n## .nan cartridges\n\n`.nan` is the Nano1 cartridge format. Version 1 stores a small header followed by the raw Nano Power 3 ROM. ROM is mapped at `0x8000`, and the header contains the CPU entry point.\n\nThe emulator menu has **File > Open Cartridge (.nan)** for loading cartridges. Raw ROMs can be packaged with `tools/make_nan.py`.
 
 Current hardware model:
 - Nano Power 3: 4-bit CPU
