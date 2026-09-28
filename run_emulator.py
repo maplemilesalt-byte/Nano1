@@ -1,6 +1,7 @@
 from emulator.nano1 import Nano1
 from emulator.display import Display
 from emulator.memory import INPUT_DPAD, INPUT_FIRE
+from emulator.cartridge import load_file, ROM_BASE, CartridgeError
 
 
 def draw_test_pattern(nano):
@@ -43,6 +44,47 @@ def run_cube_demo(nano):
 
     image = tk.PhotoImage(width=200, height=100)
     canvas.create_image(0, 0, image=image, anchor="nw")
+
+    menubar = tk.Menu(root)
+    file_menu = tk.Menu(menubar, tearoff=False)
+    file_menu.add_command(label="Open Cartridge (.nan)", command=lambda: open_cartridge())
+    file_menu.add_separator()
+    file_menu.add_command(label="Reset", command=lambda: reset_emulator())
+    file_menu.add_separator()
+    file_menu.add_command(label="Exit", command=root.destroy)
+    menubar.add_cascade(label="File", menu=file_menu)
+
+    emulator_menu = tk.Menu(menubar, tearoff=False)
+    emulator_menu.add_command(label="CPU Step", command=lambda: nano.cpu.step())
+    menubar.add_cascade(label="Emulator", menu=emulator_menu)
+    root.config(menu=menubar)
+
+    status = tk.Label(root, text="No cartridge loaded", anchor="w", padx=4)
+    status.pack(fill="x")
+
+    def reset_emulator():
+        nano.cpu.reset()
+        nano.memory.vram[:] = b"\\x00" * len(nano.memory.vram)
+        nano.input.state = 0
+        status.config(text="Reset")
+        draw()
+
+    def open_cartridge():
+        from tkinter import filedialog, messagebox
+        path = filedialog.askopenfilename(
+            title="Open Nano1 Cartridge",
+            filetypes=[("Nano1 cartridge", "*.nan"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            cart = load_file(path)
+            nano.memory.load_rom(cart["rom"])
+            nano.cpu.reset()
+            nano.cpu.pc = cart["entry"]
+            status.config(text=f"Loaded: {path.split('/')[-1]}  |  ROM: {len(cart['rom'])} bytes  |  PC: 0x{cart['entry']:04X}")
+        except (OSError, CartridgeError) as exc:
+            messagebox.showerror("Nano1 cartridge error", str(exc))
 
     key_map = {
         "Up": nano.input.UP,
