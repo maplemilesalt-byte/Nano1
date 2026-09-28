@@ -4,7 +4,10 @@ RAM_SIZE = 4 * 1024
 VRAM_SIZE = 4 * 1024
 VRAM_BASE = 0x1000
 INPUT_BASE = 0x2000
+INPUT_DPAD = INPUT_BASE
+INPUT_FIRE = INPUT_BASE + 1
 RAM_BASE = 0x0000
+
 
 class Memory:
     def __init__(self):
@@ -22,8 +25,11 @@ class Memory:
             return self.ram[address]
         if VRAM_BASE <= address < VRAM_BASE + VRAM_SIZE:
             return self.vram[address - VRAM_BASE]
-        if INPUT_BASE <= address < INPUT_BASE + 1 and self.input is not None:
-            return self.input.state
+        if self.input is not None:
+            if address == INPUT_DPAD:
+                return self.input.state & 0x0F
+            if address == INPUT_FIRE:
+                return 1 if self.input.is_pressed(self.input.FIRE) else 0
         if address >= 0x8000 and address - 0x8000 < len(self.rom):
             return self.rom[address - 0x8000]
         return 0
