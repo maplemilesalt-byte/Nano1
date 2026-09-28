@@ -66,7 +66,7 @@ def run_cube_demo(nano):
 
     def reset_emulator():
         nano.cpu.reset()
-        nano.memory.vram[:] = b"\\x00" * len(nano.memory.vram)
+        nano.memory.vram[:] = b"\x00" * len(nano.memory.vram)
         nano.input.state = 0
         if cartridge_loaded:
             nano.cpu.pc = loaded_entry
@@ -87,7 +87,7 @@ def run_cube_demo(nano):
         try:
             cart = load_file(path)
             nano.memory.load_rom(cart["rom"])
-            nano.memory.vram[:] = b"\\x00" * len(nano.memory.vram)
+            nano.memory.vram[:] = b"\x00" * len(nano.memory.vram)
             nano.cpu.reset()
             nano.cpu.pc = cart["entry"]
             loaded_entry = cart["entry"]
