@@ -1,5 +1,7 @@
 from emulator.nano1 import Nano1
 from emulator.display import Display
+from emulator.memory import INPUT_DPAD, INPUT_FIRE
+
 
 def draw_test_pattern(nano):
     # Draw a 20x20 black square at the top-left of the 200x100 display.
@@ -7,6 +9,7 @@ def draw_test_pattern(nano):
     for y in range(20):
         for x in range(20):
             set_pixel(nano.memory.vram, x, y, 1)
+
 
 def cpu_test():
     nano = Nano1()
@@ -20,14 +23,30 @@ def cpu_test():
 
     return nano.cpu.a
 
+
 def input_test():
     nano = Nano1()
+
+    # D-pad: RIGHT = 0x08 at 0x2000.
+    nano.input.press(nano.input.RIGHT)
+    program = bytes([0xC0, 0x00, 0x20, 0xE0])  # LOAD A, [0x2000] ; HALT
+    nano.load_program(program)
+    nano.run()
+    if nano.cpu.a != 0x08:
+        raise AssertionError(f"Expected CPU to read RIGHT=0x08, got 0x{nano.cpu.a:02X}")
+
+    nano.reset()
+
+    # FIRE is a separate 0/1 register at 0x2001 because the CPU is 4-bit.
     nano.input.press(nano.input.FIRE)
-    value = nano.memory.read8(0x2000)
-    nano.input.release(nano.input.FIRE)
-    if value != nano.input.FIRE:
-        raise AssertionError(f"Expected FIRE=16, got {value}")
-    return value
+    program = bytes([0xC0, 0x01, 0x20, 0xE0])  # LOAD A, [0x2001] ; HALT
+    nano.load_program(program)
+    nano.run()
+    if nano.cpu.a != 1:
+        raise AssertionError(f"Expected CPU to read FIRE=1, got {nano.cpu.a}")
+
+    return nano.cpu.a
+
 
 def vram_test():
     nano = Nano1()
@@ -43,6 +62,7 @@ def vram_test():
         raise AssertionError("Expected pixel (0, 0) to remain OFF for VRAM byte 0x01")
     return nano.memory.vram[0]
 
+
 def memory_test():
     nano = Nano1()
     # LDI A, 10 ; STORE A, [0x0200] ; LDI A, 0 ; LOAD A, [0x0200] ; HALT
@@ -52,6 +72,7 @@ def memory_test():
     if nano.cpu.a != 0x0A:
         raise AssertionError(f"Expected RAM value 10, got {nano.cpu.a}")
     return nano.cpu.a
+
 
 if __name__ == "__main__":
     nano = Nano1()
@@ -85,10 +106,13 @@ if __name__ == "__main__":
     print()
     print("Running input test...")
     input_value = input_test()
-    print(f"Input register = 0x{input_value:02X}")
+    print(f"CPU input read = {input_value}")
     print("Input test passed.")
+    print()
+    print(f"Input D-pad register = 0x{INPUT_DPAD:04X}")
+    print(f"Input FIRE register = 0x{INPUT_FIRE:04X}")
     print()
     print("Drawing 20x20 display test pattern...")
     draw_test_pattern(nano)
     print("Starting Nano1 display...")
-    Display(nano.memory.vram).run()
+    Display(nano.memory.vram, nano.input).run()
