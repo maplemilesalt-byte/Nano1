@@ -3,6 +3,7 @@
 RAM_SIZE = 4 * 1024
 VRAM_SIZE = 4 * 1024
 VRAM_BASE = 0x1000
+INPUT_BASE = 0x2000
 RAM_BASE = 0x0000
 
 class Memory:
@@ -10,6 +11,7 @@ class Memory:
         self.ram = bytearray(RAM_SIZE)
         self.vram = bytearray(VRAM_SIZE)
         self.rom = bytearray()
+        self.input = None
 
     def load_rom(self, data):
         self.rom = bytearray(data)
@@ -20,6 +22,8 @@ class Memory:
             return self.ram[address]
         if VRAM_BASE <= address < VRAM_BASE + VRAM_SIZE:
             return self.vram[address - VRAM_BASE]
+        if INPUT_BASE <= address < INPUT_BASE + 1 and self.input is not None:
+            return self.input.state
         if address >= 0x8000 and address - 0x8000 < len(self.rom):
             return self.rom[address - 0x8000]
         return 0
