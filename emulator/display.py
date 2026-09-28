@@ -3,11 +3,14 @@
 import tkinter as tk
 
 from .video import WIDTH, HEIGHT, get_pixel
+from .input import Input
 
 
 class Display:
-    def __init__(self, vram, scale=4):
+    KEY_MAP = {"Up": Input.UP, "Down": Input.DOWN, "Left": Input.LEFT, "Right": Input.RIGHT, "Return": Input.FIRE}
+    def __init__(self, vram, input_device=None, scale=4):
         self.vram = vram
+        self.input = input_device or Input()
         self.scale = scale
         self.root = tk.Tk()
         self.root.title("Nano1")
@@ -23,8 +26,21 @@ class Display:
         self.canvas.pack()
 
         self.image = tk.PhotoImage(width=WIDTH, height=HEIGHT)
+        self.root.bind("<KeyPress>", self._key_press)
+        self.root.bind("<KeyRelease>", self._key_release)
+        self.root.focus_force()
         self.canvas.create_image(0, 0, image=self.image, anchor="nw")
         self.image.zoom(scale, scale)
+
+    def _key_press(self, event):
+        button = self.KEY_MAP.get(event.keysym)
+        if button is not None:
+            self.input.press(button)
+
+    def _key_release(self, event):
+        button = self.KEY_MAP.get(event.keysym)
+        if button is not None:
+            self.input.release(button)
 
     def refresh(self):
         rows = []
