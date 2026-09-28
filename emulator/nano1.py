@@ -1,0 +1,19 @@
+"""Top-level Nano1 machine."""
+
+from .cpu import CPU
+from .memory import Memory
+
+class Nano1:
+    def __init__(self):
+        self.memory = Memory()
+        self.cpu = CPU(self.memory)
+
+    def reset(self):
+        self.cpu.reset()
+
+    def load_program(self, program, address=0):
+        self.memory.load_program(program, address)
+        self.cpu.pc = address
+
+    def run(self, cycles=1000):
+        self.cpu.run(cycles)
