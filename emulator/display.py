@@ -7,7 +7,14 @@ from .input import Input
 
 
 class Display:
-    KEY_MAP = {"Up": Input.UP, "Down": Input.DOWN, "Left": Input.LEFT, "Right": Input.RIGHT, "Return": Input.FIRE}
+    KEY_MAP = {
+        "Up": Input.UP,
+        "Down": Input.DOWN,
+        "Left": Input.LEFT,
+        "Right": Input.RIGHT,
+        "Return": Input.FIRE,
+    }
+
     def __init__(self, vram, input_device=None, scale=4):
         self.vram = vram
         self.input = input_device or Input()
@@ -30,7 +37,36 @@ class Display:
         self.root.bind("<KeyRelease>", self._key_release)
         self.root.focus_force()
         self.canvas.create_image(0, 0, image=self.image, anchor="nw")
-        self.image.zoom(scale, scale)
+
+        self.input_frame = tk.Frame(self.root, padx=8, pady=6)
+        self.input_frame.pack(fill="x")
+
+        self.input_labels = {}
+        for name, button in (
+            ("UP", Input.UP),
+            ("DOWN", Input.DOWN),
+            ("LEFT", Input.LEFT),
+            ("RIGHT", Input.RIGHT),
+            ("FIRE", Input.FIRE),
+        ):
+            label = tk.Label(
+                self.input_frame,
+                text=f"{name}: OFF",
+                width=10,
+                relief="sunken",
+                bd=1,
+            )
+            label.pack(side="left", padx=2)
+            self.input_labels[button] = label
+
+        self.input_state_label = tk.Label(
+            self.root,
+            text="INPUT: 0x00",
+            anchor="w",
+            padx=8,
+            pady=3,
+        )
+        self.input_state_label.pack(fill="x")
 
     def _key_press(self, event):
         button = self.KEY_MAP.get(event.keysym)
@@ -42,6 +78,14 @@ class Display:
         if button is not None:
             self.input.release(button)
 
+    def _update_input_display(self):
+        for button, label in self.input_labels.items():
+            name = Input.NAMES[button]
+            state = "ON" if self.input.is_pressed(button) else "OFF"
+            label.config(text=f"{name}: {state}")
+
+        self.input_state_label.config(text=f"INPUT: 0x{self.input.state:02X}")
+
     def refresh(self):
         rows = []
         for y in range(HEIGHT):
@@ -51,6 +95,7 @@ class Display:
             rows.append("{" + " ".join(row) + "}")
 
         self.image.put(" ".join(rows))
+        self._update_input_display()
         self.root.after(16, self.refresh)
 
     def run(self):
