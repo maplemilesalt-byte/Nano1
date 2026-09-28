@@ -1,4 +1,5 @@
 from emulator.nano1 import Nano1
+from emulator.display import Display
 
 def cpu_test():
     nano = Nano1()
@@ -65,3 +66,6 @@ if __name__ == "__main__":
     vram = vram_test()
     print(f"VRAM[0] = {vram}")
     print("VRAM write test passed.")
+    print()
+    print("Starting Nano1 display...")
+    Display(nano.memory.vram).run()
