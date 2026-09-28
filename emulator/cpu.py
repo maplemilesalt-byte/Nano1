@@ -58,8 +58,8 @@ class CPU:
 
         if opcode == 0x0:       # NOP
             return
-        elif opcode == 0x1:     # LDI r, imm4
-            self._set_reg(operand >> 2, operand & 3)
+        elif opcode == 0x1:     # LDI r, imm4 (next byte)
+            self._set_reg(operand & 3, self._fetch8() & 0xF)
         elif opcode == 0x2:     # MOV rd, rs
             self._set_reg(operand >> 2, self._get_reg(operand & 3))
         elif opcode == 0x3:     # ADD A, r
