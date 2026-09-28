@@ -12,6 +12,16 @@ def cpu_test():
 
     return nano.cpu.a
 
+def memory_test():
+    nano = Nano1()
+    # LDI A, 10 ; STORE A, [0x0200] ; LDI A, 0 ; LOAD A, [0x0200] ; HALT
+    program = bytes([0x10, 0x0A, 0xD0, 0x00, 0x02, 0x10, 0x00, 0xC0, 0x00, 0x02, 0xE0])
+    nano.load_program(program)
+    nano.run()
+    if nano.cpu.a != 0x0A:
+        raise AssertionError(f"Expected RAM value 10, got {nano.cpu.a}")
+    return nano.cpu.a
+
 if __name__ == "__main__":
     nano = Nano1()
 
@@ -29,3 +39,10 @@ if __name__ == "__main__":
     print(f"A + B = {result}")
     print()
     print("CPU test passed.")
+    print()
+    print("Running RAM test...")
+    value = memory_test()
+    print("Stored A = 10")
+    print(f"Loaded A = {value}")
+    print()
+    print("RAM test passed.")
