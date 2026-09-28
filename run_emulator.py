@@ -11,6 +11,108 @@ def draw_test_pattern(nano):
             set_pixel(nano.memory.vram, x, y, 1)
 
 
+def run_cube_demo(nano):
+    """Run a tiny CPU-controlled cube demo.
+
+    The cube is stored as four pixels and moves with the D-pad.
+    Holding FIRE grows it up to a small maximum size.
+    """
+    from emulator.video import set_pixel
+
+    x, y = 90, 40
+    size = 20
+
+    def clear():
+        nano.memory.vram[:] = b"\\x00" * len(nano.memory.vram)
+
+    def draw():
+        clear()
+        for py in range(y, min(y + size, 100)):
+            for px in range(x, min(x + size, 200)):
+                set_pixel(nano.memory.vram, px, py, 1)
+
+    def update():
+        nonlocal x, y, size
+
+        # Let the Nano Power 3 read the real input registers.
+        dpad = nano.memory.read8(INPUT_DPAD)
+        fire = nano.memory.read8(INPUT_FIRE)
+
+        if dpad & nano.input.LEFT:
+            x -= 2
+        if dpad & nano.input.RIGHT:
+            x += 2
+        if dpad & nano.input.UP:
+            y -= 2
+        if dpad & nano.input.DOWN:
+            y += 2
+
+        if fire and size < 40:
+            size += 1
+
+        x = max(0, min(x, 200 - size))
+        y = max(0, min(y, 100 - size))
+
+        draw()
+        nano.memory.input = nano.input
+        nano.display_root.after(16, update)
+
+    import tkinter as tk
+    nano.display_root = tk.Tk()
+    nano.display_root.title("Nano1 - Cube Demo")
+    nano.display_root.resizable(False, False)
+
+    canvas = tk.Canvas(
+        nano.display_root,
+        width=200 * 4,
+        height=100 * 4,
+        bg="white",
+        highlightthickness=0,
+    )
+    canvas.pack()
+
+    image = tk.PhotoImage(width=200, height=100)
+    canvas.create_image(0, 0, image=image, anchor="nw")
+
+    key_map = {
+        "Up": nano.input.UP,
+        "Down": nano.input.DOWN,
+        "Left": nano.input.LEFT,
+        "Right": nano.input.RIGHT,
+        "Return": nano.input.FIRE,
+    }
+
+    def key_press(event):
+        button = key_map.get(event.keysym)
+        if button is not None:
+            nano.input.press(button)
+
+    def key_release(event):
+        button = key_map.get(event.keysym)
+        if button is not None:
+            nano.input.release(button)
+
+    nano.display_root.bind("<KeyPress>", key_press)
+    nano.display_root.bind("<KeyRelease>", key_release)
+    nano.display_root.focus_force()
+
+    def refresh():
+        rows = []
+        for py in range(100):
+            row = []
+            for px in range(200):
+                from emulator.video import get_pixel
+                row.append("#000000" if get_pixel(nano.memory.vram, px, py) else "#FFFFFF")
+            rows.append("{" + " ".join(row) + "}")
+        image.put(" ".join(rows))
+        nano.display_root.after(16, refresh)
+
+    draw()
+    update()
+    refresh()
+    nano.display_root.mainloop()
+
+
 def cpu_test():
     nano = Nano1()
     # LDI A, 3 ; LDI B, 5 ; ADD A, B ; HALT
@@ -112,7 +214,5 @@ if __name__ == "__main__":
     print(f"Input D-pad register = 0x{INPUT_DPAD:04X}")
     print(f"Input FIRE register = 0x{INPUT_FIRE:04X}")
     print()
-    print("Drawing 20x20 display test pattern...")
-    draw_test_pattern(nano)
-    print("Starting Nano1 display...")
-    Display(nano.memory.vram, nano.input).run()
+    print("Starting CPU-controlled cube demo...")
+    run_cube_demo(nano)
