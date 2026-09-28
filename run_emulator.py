@@ -19,6 +19,8 @@ def run_cube_demo(nano):
     x, y = 90, 40
     size = 20
     fire_was_pressed = False
+    cartridge_loaded = False
+    loaded_entry = 0
 
     def clear():
         nano.memory.vram[:] = b"\x00" * len(nano.memory.vram)
@@ -66,10 +68,15 @@ def run_cube_demo(nano):
         nano.cpu.reset()
         nano.memory.vram[:] = b"\\x00" * len(nano.memory.vram)
         nano.input.state = 0
-        status.config(text="Reset")
+        if cartridge_loaded:
+            nano.cpu.pc = loaded_entry
+            status.config(text=f"Cartridge reset | PC: 0x{loaded_entry:04X}")
+        else:
+            status.config(text="Reset")
         draw()
 
     def open_cartridge():
+        nonlocal cartridge_loaded, loaded_entry
         from tkinter import filedialog, messagebox
         path = filedialog.askopenfilename(
             title="Open Nano1 Cartridge",
@@ -80,8 +87,11 @@ def run_cube_demo(nano):
         try:
             cart = load_file(path)
             nano.memory.load_rom(cart["rom"])
+            nano.memory.vram[:] = b"\\x00" * len(nano.memory.vram)
             nano.cpu.reset()
             nano.cpu.pc = cart["entry"]
+            loaded_entry = cart["entry"]
+            cartridge_loaded = True
             status.config(text=f"Loaded: {path.split('/')[-1]}  |  ROM: {len(cart['rom'])} bytes  |  PC: 0x{cart['entry']:04X}")
         except (OSError, CartridgeError) as exc:
             messagebox.showerror("Nano1 cartridge error", str(exc))
@@ -113,27 +123,32 @@ def run_cube_demo(nano):
     def update():
         nonlocal x, y, size, fire_was_pressed
 
-        dpad = nano.memory.read8(INPUT_DPAD)
-        fire = nano.memory.read8(INPUT_FIRE)
+        if cartridge_loaded:
+            # Give a loaded .nan program CPU time every frame.
+            nano.cpu.run(200)
+        else:
+            dpad = nano.memory.read8(INPUT_DPAD)
+            fire = nano.memory.read8(INPUT_FIRE)
 
-        if dpad & nano.input.LEFT:
-            x -= 2
-        if dpad & nano.input.RIGHT:
-            x += 2
-        if dpad & nano.input.UP:
-            y -= 2
-        if dpad & nano.input.DOWN:
-            y += 2
+            if dpad & nano.input.LEFT:
+                x -= 2
+            if dpad & nano.input.RIGHT:
+                x += 2
+            if dpad & nano.input.UP:
+                y -= 2
+            if dpad & nano.input.DOWN:
+                y += 2
 
-        # One size increase per FIRE press.
-        if fire and not fire_was_pressed and size < 40:
-            size += 2
-        fire_was_pressed = bool(fire)
+            # One size increase per FIRE press.
+            if fire and not fire_was_pressed and size < 40:
+                size += 2
+            fire_was_pressed = bool(fire)
 
-        x = max(0, min(x, 200 - size))
-        y = max(0, min(y, 100 - size))
+            x = max(0, min(x, 200 - size))
+            y = max(0, min(y, 100 - size))
 
-        draw()
+            draw()
+
         root.after(16, update)
 
     def refresh():
