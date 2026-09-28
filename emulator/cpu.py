@@ -102,6 +102,8 @@ class CPU:
             self.memory.write8(self._fetch16(), self.a)
         elif opcode == 0xE:     # HALT
             self.halted = True
+        elif opcode == 0xF:     # STORE/LOAD helpers reserved for future ISA expansion
+            raise RuntimeError("Nano Power 3 opcode 0xF is reserved")
         else:
             raise RuntimeError(f"Unknown Nano Power 3 opcode: 0x{opcode:X}")
 
