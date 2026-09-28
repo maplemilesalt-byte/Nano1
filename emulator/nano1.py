@@ -9,6 +9,7 @@ class Nano1:
         self.memory = Memory()
         self.cpu = CPU(self.memory)
         self.input = Input()
+        self.memory.input = self.input
 
     def reset(self):
         self.cpu.reset()
